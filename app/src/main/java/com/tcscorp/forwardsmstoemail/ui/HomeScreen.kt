@@ -98,7 +98,8 @@ fun HomeScreen(viewModel: HomeViewModel) {
                         text = stringResource(id = R.string.apply_settings),
                         style = MaterialTheme.typography.subtitle2.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            fontSize = 16.sp,
+                            fontFamily = FontFamily(Font(R.font.productsansregular))
                         ),
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
