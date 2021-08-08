@@ -13,9 +13,10 @@ import javax.inject.Inject
 
 const val SEND_EMAIL_WORK = "send_email"
 
-class SmsReceiver @Inject constructor(
-    private val workManager: WorkManager
-) : BroadcastReceiver() {
+class SmsReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var workManager: WorkManager
 
     override fun onReceive(context: Context, intent: Intent) {
         Sms.Intents.getMessagesFromIntent(intent)?.let { messages ->

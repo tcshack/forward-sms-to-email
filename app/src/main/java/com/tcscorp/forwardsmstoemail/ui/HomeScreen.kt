@@ -1,6 +1,7 @@
 package com.tcscorp.forwardsmstoemail.ui
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
@@ -177,7 +179,7 @@ fun SystemStatus(
 @Composable
 fun SettingsSection(
     modifier: Modifier,
-    settingsUiState: ApplyPreferencesUiState,
+    applyPreferencesUiState: ApplyPreferencesUiState,
     viewModel: HomeViewModel
 ) {
     val emailAddress: String by viewModel.emailAddress.collectAsState()
@@ -186,21 +188,22 @@ fun SettingsSection(
     val mailServer: String by viewModel.mailServer.collectAsState()
     val mailHost: String by viewModel.mailHost.collectAsState()
     val mailPort: String by viewModel.mailPort.collectAsState()
-
-    settingsUiState.settingsError?.let {
+    val context = LocalContext.current
+    applyPreferencesUiState.settingsError?.let {
         Log.i("SMSForwarderLogs", "Got validation errors")
     }
 
-    settingsUiState.run {
+    applyPreferencesUiState.run {
         doOnProgress {
             ProgressDialog()
-            Log.i("SMSForwarderLogs", "Saving preferences...")
-        }
-        doOnSuccess {
-            Log.i("SMSForwarderLogs", "Successfully saved preferences -> $it")
+
         }
         doOnError {
-            Log.i("SMSForwarderLogs", "Failed while saving preferences -> ${it?.message}")
+            Toast.makeText(
+                context,
+                "An error occurred while applying settings -> ${it?.message}",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
     Column(modifier) {

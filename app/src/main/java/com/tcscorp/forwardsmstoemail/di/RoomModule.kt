@@ -1,15 +1,12 @@
 package com.tcscorp.forwardsmstoemail.di
 
 import android.app.Application
-import android.content.Context
 import androidx.room.Room
-import androidx.work.WorkManager
 import com.tcscorp.forwardsmstoemail.data.MessageDao
 import com.tcscorp.forwardsmstoemail.data.MessageDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -19,10 +16,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object RoomModule {
-    @Provides
-    fun providesWorkManager(@ApplicationContext appContext: Context): WorkManager =
-        WorkManager.getInstance(appContext)
-
     @Provides
     @Singleton
     fun provideDatabase(
