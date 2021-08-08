@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Forward SMS To Email</string>
+    <string name="apply_settings">Apply Settings</string>
+    <string name="error_require_phone_number">Phone number is required</string>
+    <string name="error_require_email_address">Email address is required</string>
+    <string name="error_require_email_password">Password is required</string>
+    <string name="error_require_server_host">Server url is required</string>
+    <string name="error_require_mail_host">Mail host is required</string>
+    <string name="error_require_mail_port">Port number is required</string>
+</resources>
