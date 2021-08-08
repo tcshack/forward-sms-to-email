@@ -11,18 +11,23 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.accompanist.insets.navigationBarsWithImePadding
 import com.tcscorp.forwardsmstoemail.R
 import com.tcscorp.forwardsmstoemail.widgets.ProgressDialog
 
@@ -190,14 +195,16 @@ fun SettingsSection(
     val mailHost: String by viewModel.mailHost.collectAsState()
     val mailPort: String by viewModel.mailPort.collectAsState()
     val context = LocalContext.current
+    var errors by remember { mutableStateOf(SettingsError()) }
+    val focusManager = LocalFocusManager.current
+
     applyPreferencesUiState.settingsError?.let {
-        Log.i("SMSForwarderLogs", "Got validation errors")
+        errors = it
     }
 
     applyPreferencesUiState.run {
         doOnProgress {
             ProgressDialog()
-
         }
         doOnError {
             Toast.makeText(
@@ -210,24 +217,33 @@ fun SettingsSection(
     Column(modifier) {
         MaterialTextInput(
             keyboardType = KeyboardType.Phone,
+            imeAction = ImeAction.Next,
             label = "Phone Number",
-            value = phoneNumber
+            value = phoneNumber,
+            errorMessageResId = errors.phoneNumberErrorResId,
+            focusManager = focusManager
         ) {
             viewModel.onPhoneNumberChange(it)
         }
 
         MaterialTextInput(
             keyboardType = KeyboardType.Email,
+            imeAction = ImeAction.Next,
             label = "Email Address",
-            value = emailAddress
+            value = emailAddress,
+            errorMessageResId = errors.emailErrorResId,
+            focusManager = focusManager
         ) {
             viewModel.onEmailAddressChange(it)
         }
 
         MaterialTextInput(
             keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Next,
             label = "Email Password",
             value = emailPassword,
+            errorMessageResId = errors.emailPasswordErrorResId,
+            focusManager = focusManager,
             isPassword = true
         ) {
             viewModel.onEmailPasswordChange(it)
@@ -235,24 +251,33 @@ fun SettingsSection(
 
         MaterialTextInput(
             keyboardType = KeyboardType.Text,
+            imeAction = ImeAction.Next,
             label = "Mail Server",
-            value = mailServer
+            value = mailServer,
+            errorMessageResId = errors.mailServerErrorResId,
+            focusManager = focusManager
         ) {
             viewModel.onMailServerChange(it)
         }
 
         MaterialTextInput(
             keyboardType = KeyboardType.Text,
+            imeAction = ImeAction.Next,
             label = "Mail Host",
-            value = mailHost
+            value = mailHost,
+            errorMessageResId = errors.mailHostErrorResId,
+            focusManager = focusManager
         ) {
             viewModel.onMailHostChange(it)
         }
 
         MaterialTextInput(
             keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Done,
             label = "Mail Port",
-            value = mailPort
+            value = mailPort,
+            errorMessageResId = errors.mailPortErrorResId,
+            focusManager = focusManager
         ) {
             viewModel.onMailPortChange(it)
         }
@@ -262,26 +287,42 @@ fun SettingsSection(
 @Composable
 fun MaterialTextInput(
     keyboardType: KeyboardType,
+    imeAction: ImeAction,
     label: String,
     value: String,
+    errorMessageResId: Int?,
+    focusManager: FocusManager,
     isPassword: Boolean = false,
     onValueChange: (String) -> Unit
 ) {
-    val focusManager = LocalFocusManager.current
     Column(Modifier.fillMaxWidth()) {
         TextField(
             value = value,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsWithImePadding(),
             onValueChange = { onValueChange(it) },
             label = { Text(label) },
             maxLines = 1,
             visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
             keyboardActions = KeyboardActions(
-                onDone = { focusManager.clearFocus() }
+                onDone = { focusManager.clearFocus() },
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
             )
         )
+        errorMessageResId?.let { messageResId ->
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(id = messageResId),
+                style = TextStyle(
+                    color = Color.Red.copy(alpha = .6f),
+                    fontSize = 13.sp,
+                    fontFamily = FontFamily(Font(R.font.productsansregular))
+                )
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
     }
 }

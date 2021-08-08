@@ -7,7 +7,7 @@ import com.tcscorp.forwardsmstoemail.ui.theme.SMSForwarderTheme
 
 @Composable
 fun SMSForwarderApp() {
-    ProvideWindowInsets {
+    ProvideWindowInsets() {
         SMSForwarderTheme {
             val viewModel = hiltViewModel<HomeViewModel>()
             HomeScreen(viewModel)
