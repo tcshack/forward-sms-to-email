@@ -7,7 +7,7 @@ import androidx.work.WorkerParameters
 import com.tcscorp.forwardsmstoemail.*
 import com.tcscorp.forwardsmstoemail.data.Message
 import com.tcscorp.forwardsmstoemail.data.MessageDao
-import com.tcscorp.forwardsmstoemail.receiver.SmsReceiver.Companion.isWorkComplete
+import com.tcscorp.forwardsmstoemail.receiver.SmsReceiver
 import com.tcscorp.forwardsmstoemail.util.emailProps
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -18,7 +18,7 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 
 @HiltWorker
-class SendEmailWorker @AssistedInject constructor(
+class PendingSMSForwardWorker @AssistedInject constructor(
     @Assisted val context: Context,
     @Assisted params: WorkerParameters,
     private val messageDao: MessageDao,
@@ -26,17 +26,14 @@ class SendEmailWorker @AssistedInject constructor(
     private lateinit var mSession: Session
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-
-        // Receive input data sent from the SmsReceiver broadcast receiver
-        val address = inputData.getString(KEY_SENDER_ADDRESS)
-        val body = inputData.getString(KEY_MESSAGE_BODY)
-        val dateSent = inputData.getLong(KEY_DATE_SENT, 0)
-        val message = Message(address!!, body!!, dateSent)
-        messageDao.insert(message)
-        sendEmail(message)
+        val pendingMessages = messageDao.getAll().filter { !it.forwarded }
+        if (pendingMessages.isNotEmpty()) {
+            sendEmail(pendingMessages)
+        }
+        Result.success()
     }
 
-    private suspend fun sendEmail(message: Message): Result {
+    private suspend fun sendEmail(pendingMessages: List<Message>): Result {
         mSession = Session.getDefaultInstance(emailProps)
         try {
             val mm = MimeMessage(mSession)
@@ -46,19 +43,20 @@ class SendEmailWorker @AssistedInject constructor(
                 InternetAddress(RECIPIENT)
             )
             mm.subject = SUBJECT
-            mm.setText(message.body)
-            val transport = mSession.getTransport(PROTOCOL)
-            transport.connect(HOST, USER, PASSWORD)
-            transport.sendMessage(mm, mm.allRecipients)
-            transport.close()
-            val updatedMessage = message.copy(forwarded = true)
-            // Set message status as forwarded such that it is ignored
-            // the next time we try to forward messages still pending
-            messageDao.update(updatedMessage)
-            isWorkComplete.emit(true)
+
+            // Forward individual messages in the list
+            pendingMessages.forEach { message ->
+                val updatedMessage = message.copy(forwarded = true)
+                mm.setText(message.body)
+                val transport = mSession.getTransport(PROTOCOL)
+                transport.connect(HOST, USER, PASSWORD)
+                transport.sendMessage(mm, mm.allRecipients)
+                transport.close()
+                messageDao.update(updatedMessage)
+            }
             return Result.success()
         } catch (e: Exception) {
-            isWorkComplete.emit(true)
+            SmsReceiver.isWorkComplete.emit(true)
             return Result.failure()
         }
     }

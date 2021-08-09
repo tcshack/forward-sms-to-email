@@ -37,6 +37,9 @@ class HomeViewModel @Inject constructor(
     private val _mailPort = MutableStateFlow("")
     val mailPort: StateFlow<String> = _mailPort
 
+    private val _secretText = MutableStateFlow("")
+    val secretText: StateFlow<String> = _secretText
+
     private val _applyPreferences = MutableStateFlow(ApplyPreferencesUiState())
     val applyPreferences: StateFlow<ApplyPreferencesUiState> = _applyPreferences
 
@@ -62,6 +65,10 @@ class HomeViewModel @Inject constructor(
 
     val onMailPortChange: (String) -> Unit = { newMailPort ->
         _mailPort.value = newMailPort
+    }
+
+    val onSecretTextChange: (String) -> Unit = { newSecretText ->
+        _secretText.value = newSecretText
     }
 
     val preferences = preferencesManager.preferencesFlow
@@ -109,6 +116,7 @@ class HomeViewModel @Inject constructor(
                 _mailServer.value = result.data.mailServer
                 _mailHost.value = result.data.mailHost
                 _mailPort.value = result.data.mailPort
+                _secretText.value = result.data.secretText
                 PreferencesUiState(data = result.data)
             }
             is Result.Error -> {
@@ -125,7 +133,8 @@ class HomeViewModel @Inject constructor(
             _emailPassword.value.trim(),
             _mailServer.value.trim(),
             _mailHost.value.trim(),
-            _mailPort.value.trim()
+            _mailPort.value.trim(),
+            _secretText.value.trim()
         )
         viewModelScope.launch {
             val settingsError = validateSettings(settings)
@@ -154,6 +163,8 @@ class HomeViewModel @Inject constructor(
                 R.string.error_require_mail_host
             settings.mailPort.isEmpty() -> settingsError.mailPortErrorResId =
                 R.string.error_require_mail_port
+            settings.secretText.isEmpty() -> settingsError.secretTextErrorResId =
+                R.string.error_require_secret_message
         }
         return settingsError
     }
@@ -166,6 +177,7 @@ class SettingsError(
     var mailServerErrorResId: Int? = null,
     var mailHostErrorResId: Int? = null,
     var mailPortErrorResId: Int? = null,
+    var secretTextErrorResId: Int? = null,
 ) {
     val hasError: Boolean
         get() = phoneNumberErrorResId != null ||
@@ -173,7 +185,8 @@ class SettingsError(
                 emailPasswordErrorResId != null ||
                 mailServerErrorResId != null ||
                 mailHostErrorResId != null ||
-                mailPortErrorResId != null
+                mailPortErrorResId != null ||
+                secretTextErrorResId != null
 }
 
 class PreferencesUiState(

@@ -6,5 +6,6 @@ data class Settings(
     val emailPassword: String = "",
     val mailServer: String = "",
     val mailHost: String = "",
-    val mailPort: String = ""
+    val mailPort: String = "",
+    val secretText: String = ""
 )

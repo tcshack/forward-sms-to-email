@@ -30,6 +30,7 @@ class PreferenceManager @Inject constructor(
                     val mailServer = preferences[PreferencesKeys.KEY_MAIL_SERVER] ?: ""
                     val mailHost = preferences[PreferencesKeys.KEY_MAIL_HOST] ?: ""
                     val mailPort = preferences[PreferencesKeys.KEY_MAIL_PORT]?.toString() ?: ""
+                    val secretText = preferences[PreferencesKeys.KEY_SECRET_TEXT]?.toString() ?: ""
                     emit(
                         Result.Success(
                             Settings(
@@ -38,7 +39,8 @@ class PreferenceManager @Inject constructor(
                                 emailPassword,
                                 mailServer,
                                 mailHost,
-                                mailPort
+                                mailPort,
+                                secretText
                             )
                         )
                     )
@@ -58,6 +60,7 @@ class PreferenceManager @Inject constructor(
                     preferences[PreferencesKeys.KEY_MAIL_SERVER] = settings.mailServer
                     preferences[PreferencesKeys.KEY_MAIL_HOST] = settings.mailHost
                     preferences[PreferencesKeys.KEY_MAIL_PORT] = settings.mailPort.toInt()
+                    preferences[PreferencesKeys.KEY_SECRET_TEXT] = settings.secretText
                     emit(Result.Success(Unit))
                 }
             } catch (error: Exception) {
@@ -73,6 +76,7 @@ class PreferenceManager @Inject constructor(
         val KEY_MAIL_SERVER = stringPreferencesKey("mail_server")
         val KEY_MAIL_HOST = stringPreferencesKey("mail_host")
         val KEY_MAIL_PORT = intPreferencesKey("mail_port")
+        val KEY_SECRET_TEXT = stringPreferencesKey("secret_text")
     }
 
 }

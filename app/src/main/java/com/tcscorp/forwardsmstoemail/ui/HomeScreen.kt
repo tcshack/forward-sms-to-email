@@ -1,6 +1,5 @@
 package com.tcscorp.forwardsmstoemail.ui
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +15,7 @@ import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -43,13 +43,6 @@ fun HomeScreen(viewModel: HomeViewModel) {
     preferencesUiState.run {
         doOnProgress {
             ProgressDialog()
-            Log.i("SMSForwarderLogs", "Reading preferences...")
-        }
-        doOnSuccess {
-            Log.i("SMSForwarderLogs", "Got preferences -> $it")
-        }
-        doOnError {
-            Log.i("SMSForwarderLogs", "Failed while getting preferences -> ${it?.message}")
         }
     }
 
@@ -72,7 +65,6 @@ fun HomeScreen(viewModel: HomeViewModel) {
                             messages.filter { message -> message.forwarded }.size
                         pendingMessagesCount = messages.size - forwardedMessagesCount
                     }
-                    doOnError { }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 SystemStatus(Modifier.fillMaxWidth(), forwardedMessagesCount, pendingMessagesCount)
@@ -194,8 +186,10 @@ fun SettingsSection(
     val mailServer: String by viewModel.mailServer.collectAsState()
     val mailHost: String by viewModel.mailHost.collectAsState()
     val mailPort: String by viewModel.mailPort.collectAsState()
+    val secretText: String by viewModel.secretText.collectAsState()
     val context = LocalContext.current
     var errors by remember { mutableStateOf(SettingsError()) }
+    var isPassword by remember { mutableStateOf(true) }
     val focusManager = LocalFocusManager.current
 
     applyPreferencesUiState.settingsError?.let {
@@ -273,13 +267,28 @@ fun SettingsSection(
 
         MaterialTextInput(
             keyboardType = KeyboardType.Number,
-            imeAction = ImeAction.Done,
+            imeAction = ImeAction.Next,
             label = "Mail Port",
             value = mailPort,
             errorMessageResId = errors.mailPortErrorResId,
             focusManager = focusManager
         ) {
             viewModel.onMailPortChange(it)
+        }
+
+        MaterialTextInput(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done,
+            label = "Secret Text",
+            value = secretText,
+            errorMessageResId = errors.secretTextErrorResId,
+            focusManager = focusManager,
+            isPassword = isPassword,
+            onToggle = { show ->
+                isPassword = show
+            },
+        ) {
+            viewModel.onSecretTextChange(it)
         }
     }
 }
@@ -293,6 +302,7 @@ fun MaterialTextInput(
     errorMessageResId: Int?,
     focusManager: FocusManager,
     isPassword: Boolean = false,
+    onToggle: ((Boolean) -> Unit)? = null,
     onValueChange: (String) -> Unit
 ) {
     Column(Modifier.fillMaxWidth()) {
@@ -306,6 +316,18 @@ fun MaterialTextInput(
             maxLines = 1,
             visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
             singleLine = true,
+            trailingIcon = if (onToggle != null) {
+                {
+                    IconButton(onClick = { onToggle(!isPassword) }) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (isPassword) R.drawable.visibility_show else R.drawable.visibility_hide
+                            ),
+                            contentDescription = null
+                        )
+                    }
+                }
+            } else null,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
             keyboardActions = KeyboardActions(
                 onDone = { focusManager.clearFocus() },

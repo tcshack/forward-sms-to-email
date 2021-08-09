@@ -5,7 +5,10 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "message_table")
 data class Message(
-    @PrimaryKey val id: String,
-    val content: String,
-    val forwarded: Boolean = false
+    val address: String,
+    val body: String,
+    val dateSent: Long,
+    val date: Long = System.currentTimeMillis(),
+    val forwarded: Boolean = false,
+    @PrimaryKey(autoGenerate = true) val id: Long = date
 )

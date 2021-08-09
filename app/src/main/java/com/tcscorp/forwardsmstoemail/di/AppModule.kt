@@ -14,5 +14,4 @@ abstract class AppModule {
     abstract fun provideMessageRepository(
         defaultMessageRepository: DefaultMessageRepository
     ): MessageRepository
-
 }

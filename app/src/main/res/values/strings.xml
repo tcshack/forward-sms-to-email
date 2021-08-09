@@ -7,4 +7,5 @@
     <string name="error_require_server_host">Server url is required</string>
     <string name="error_require_mail_host">Mail host is required</string>
     <string name="error_require_mail_port">Port number is required</string>
+    <string name="error_require_secret_message">Secret message is required</string>
 </resources>

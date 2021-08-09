@@ -8,11 +8,8 @@ interface MessageDao {
     @Query("SELECT * FROM message_table")
     fun getAll(): List<Message>
 
-    @Query("SELECT * FROM message_table WHERE (forwarded == :forwarded)")
-    fun getPendingMessages(forwarded: Boolean = false): List<Message>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(task: Message)
+    suspend fun insert(task: Message): Long
 
     @Update
     suspend fun update(task: Message)
